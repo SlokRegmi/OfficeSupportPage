@@ -2,7 +2,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { User, Hand, Play, HelpCircle, RefreshCw } from 'lucide-react';
 import { useTickets } from '@/hooks/useTicketsData';
-import { useApiMode } from '@/context/ApiModeContext';
 import type { TicketStatus, Priority } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
@@ -22,7 +21,6 @@ const priorityDot: Record<Priority, string> = {
 
 export function TeamBoardView({ onViewTicket }: { onViewTicket: (id: string) => void }) {
   const { tickets, isLoading, refetch } = useTickets();
-  const { isApiMode } = useApiMode();
 
   return (
     <div className="p-6 space-y-6 h-full">
@@ -38,7 +36,7 @@ export function TeamBoardView({ onViewTicket }: { onViewTicket: (id: string) => 
           onClick={() => refetch()}
         >
           <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
-          {isApiMode ? 'Refresh' : 'Reload'}
+          Refresh
         </Button>
       </div>
 

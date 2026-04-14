@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTickets } from '@/hooks/useTicketsData';
-import { useApiMode } from '@/context/ApiModeContext';
 import type { Priority, TicketStatus, Ticket } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 
@@ -83,7 +82,6 @@ interface DashboardViewProps {
 
 export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewProps) {
   const { tickets, isLoading, isError, refetch } = useTickets();
-  const { isApiMode } = useApiMode();
 
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -165,7 +163,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
             onClick={() => refetch()}
           >
             <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
-            {isApiMode ? 'Refresh' : 'Reload'}
+            Refresh
           </Button>
         </div>
       </div>
@@ -261,7 +259,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       {/* API error banner */}
       {isError && (
         <div className="rounded-md bg-primary/10 border border-primary/20 px-4 py-3 text-sm text-primary">
-          Could not reach the API. Showing cached or empty data.
+          Could not reach the API. Please check if the backend server is running.
         </div>
       )}
 

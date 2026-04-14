@@ -1,37 +1,60 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Shield, Building2, Users, Eye, EyeOff, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { mockUsers } from '@/data/users';
 import { cn } from '@/lib/utils';
-import type { AppUser } from '@/data/users';
+import { api } from '@/services/api';
+import type { AuthUser } from '@/services/api';
 
-const inorinsUsers = mockUsers.filter((u) => u.role === 'inorins');
-const clientUsers = mockUsers.filter((u) => u.role === 'client');
+const DEMO_PASSWORD = 'demo123';
 
 export function LoginPage() {
   const { login } = useAuth();
+  const [demoUsers, setDemoUsers] = useState<AuthUser[]>([]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const users = await api.getDemoUsers();
+        setDemoUsers(users);
+      } catch {
+        setDemoUsers([]);
+      }
+    };
+
+    void loadUsers();
+  }, []);
+
+  const inorinsUsers = useMemo(
+    () => demoUsers.filter((user) => user.role === 'inorins'),
+    [demoUsers],
+  );
+
+  const clientUsers = useMemo(
+    () => demoUsers.filter((user) => user.role === 'client'),
+    [demoUsers],
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     await new Promise((r) => setTimeout(r, 400)); // brief loading feel
-    const result = login(email.trim(), password);
+    const result = await login(email.trim(), password);
     setIsLoading(false);
     if (!result.success) setError(result.error ?? 'Login failed.');
   };
 
-  const quickLogin = (user: AppUser) => {
+  const quickLogin = (user: AuthUser) => {
     setEmail(user.email);
-    setPassword(user.password);
+    setPassword(DEMO_PASSWORD);
     setError('');
   };
 
@@ -174,7 +197,7 @@ export function LoginPage() {
             </div>
 
             <p className="text-[11px] text-muted-foreground mt-3 text-center">
-              All demo accounts use password: <span className="font-mono font-semibold">demo123</span>
+              All demo accounts use password: <span className="font-mono font-semibold">{DEMO_PASSWORD}</span>
             </p>
           </div>
         </div>
@@ -183,7 +206,7 @@ export function LoginPage() {
   );
 }
 
-function QuickLoginCard({ user, onSelect }: { user: AppUser; onSelect: (u: AppUser) => void }) {
+function QuickLoginCard({ user, onSelect }: { user: AuthUser; onSelect: (u: AuthUser) => void }) {
   return (
     <button
       type="button"

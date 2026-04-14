@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ClientHeader } from '@/components/client/ClientHeader';
 import { ClientSidebar } from '@/components/client/ClientSidebar';
 import { ClientTicketListView } from '@/components/views/ClientTicketListView';
@@ -8,11 +9,34 @@ import { useTickets } from '@/hooks/useTicketsData';
 import { useAuth } from '@/context/AuthContext';
 import { HelpCircle } from 'lucide-react';
 
+function ClientTicketDetailRoute() {
+  const { ticketId } = useParams<{ ticketId: string }>();
+  const navigate = useNavigate();
+
+  if (!ticketId) {
+    return <Navigate to="/client/tickets" replace />;
+  }
+
+  return (
+    <ClientTicketDetailView
+      ticketId={ticketId}
+      onBack={() => navigate('/client/tickets')}
+    />
+  );
+}
+
 export function ClientPortal() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { tickets } = useTickets();
-  const [activeView, setActiveView] = useState<string>('my-tickets');
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
+  const activeView = useMemo(() => {
+    const { pathname } = location;
+    if (pathname.startsWith('/client/tickets/new')) return 'new-ticket';
+    if (pathname.startsWith('/client/faq')) return 'faq';
+    return 'my-tickets';
+  }, [location.pathname]);
 
   const myTickets = useMemo(() => {
     if (!user?.bankDomain) return [];
@@ -22,42 +46,42 @@ export function ClientPortal() {
   const openCount = myTickets.filter((t) => t.status === 'Open' || t.status === 'In Progress').length;
 
   const handleViewTicket = (id: string) => {
-    setSelectedTicketId(id);
-    setActiveView('ticket-detail');
+    navigate(`/client/tickets/${id}`);
   };
 
-  const handleBack = () => {
-    setSelectedTicketId(null);
-    setActiveView('my-tickets');
-  };
-
-  const renderContent = () => {
-    if (activeView === 'ticket-detail' && selectedTicketId) {
-      return <ClientTicketDetailView ticketId={selectedTicketId} onBack={handleBack} />;
-    }
-    switch (activeView) {
+  const handleNavigate = (view: string) => {
+    switch (view) {
       case 'my-tickets':
-        return <ClientTicketListView onViewTicket={handleViewTicket} />;
+        navigate('/client/tickets');
+        return;
       case 'new-ticket':
-        return <ClientNewTicketView onSuccess={() => setActiveView('my-tickets')} />;
+        navigate('/client/tickets/new');
+        return;
       case 'faq':
-        return <FaqView />;
+        navigate('/client/faq');
+        return;
       default:
-        return <ClientTicketListView onViewTicket={handleViewTicket} />;
+        navigate('/client/tickets');
     }
   };
 
   return (
     <div className="flex min-h-screen w-full bg-surface">
       <ClientSidebar
-        activeView={activeView === 'ticket-detail' ? 'my-tickets' : activeView}
-        onNavigate={setActiveView}
+        activeView={activeView}
+        onNavigate={handleNavigate}
         openTicketCount={openCount}
       />
       <div className="flex-1 flex flex-col min-h-screen">
-        <ClientHeader onNewTicket={() => setActiveView('new-ticket')} />
+        <ClientHeader onNewTicket={() => navigate('/client/tickets/new')} />
         <main className="flex-1 overflow-auto">
-          {renderContent()}
+          <Routes>
+            <Route path="tickets" element={<ClientTicketListView onViewTicket={handleViewTicket} />} />
+            <Route path="tickets/new" element={<ClientNewTicketView onSuccess={() => navigate('/client/tickets')} />} />
+            <Route path="tickets/:ticketId" element={<ClientTicketDetailRoute />} />
+            <Route path="faq" element={<FaqView />} />
+            <Route path="*" element={<Navigate to="/client/tickets" replace />} />
+          </Routes>
         </main>
       </div>
     </div>

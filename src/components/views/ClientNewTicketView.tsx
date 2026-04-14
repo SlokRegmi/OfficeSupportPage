@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { systemModules } from '@/data/mockData';
 import { api } from '@/services/api';
-import { useApiMode } from '@/context/ApiModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -20,7 +19,6 @@ interface ClientNewTicketViewProps {
 const STEPS = ['Issue Details', 'System & Module', 'Attachments'];
 
 export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
-  const { isApiMode } = useApiMode();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -47,25 +45,23 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    if (isApiMode) {
-      try {
-        await api.createTicket({
-          title,
-          description,
-          priority: priority as any,
-          system,
-          module,
-          form,
-          environment: isProduction ? 'Production' : 'UAT',
-          reporter: user?.name,
-          reporterEmail: user?.email,
-        });
-        await queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      } finally {
-        setIsSubmitting(false);
-      }
-    } else {
-      await new Promise((r) => setTimeout(r, 600));
+    try {
+      await api.createTicket({
+        title,
+        description,
+        priority: priority as any,
+        system,
+        module,
+        form,
+        environment: isProduction ? 'Production' : 'UAT',
+        reporter: user?.name,
+        reporterEmail: user?.email,
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['stats'] }),
+      ]);
+    } finally {
       setIsSubmitting(false);
     }
     setSubmitted(true);
@@ -245,7 +241,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
 
           {/* Summary */}
           <div className="rounded-lg bg-surface border border-border p-4 space-y-1.5 text-sm">
-            <p className="font-semibold text-foreground text-xs uppercase tracking-wide text-muted-foreground mb-2">Summary</p>
+            <p className="font-semibold text-xs uppercase tracking-wide text-muted-foreground mb-2">Summary</p>
             <div className="flex justify-between"><span className="text-muted-foreground">Title</span><span className="font-medium text-foreground truncate max-w-[60%]">{title}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Priority</span><span className="font-medium text-foreground">{priority}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">System</span><span className="font-medium text-foreground">{system} › {module} › {form}</span></div>

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppSidebar } from '@/components/layout/AppSidebar';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { DashboardView } from '@/components/views/DashboardView';
@@ -6,47 +7,63 @@ import { CreateTicketModal } from '@/components/views/CreateTicketModal';
 import { TeamBoardView } from '@/components/views/TeamBoardView';
 import { TicketDetailView } from '@/components/views/TicketDetailView';
 
+function StaffTicketDetailRoute() {
+  const { ticketId } = useParams<{ ticketId: string }>();
+  const navigate = useNavigate();
+
+  if (!ticketId) {
+    return <Navigate to="/staff/tickets" replace />;
+  }
+
+  return (
+    <TicketDetailView
+      ticketId={ticketId}
+      onBack={() => navigate('/staff/tickets')}
+    />
+  );
+}
+
 const Index = () => {
-  const [activeView, setActiveView] = useState('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [showCreateTicket, setShowCreateTicket] = useState(false);
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const handleViewTicket = (id: string) => {
-    setSelectedTicketId(id);
-    setActiveView('ticket-detail');
-  };
+  const activeView = useMemo(() => {
+    const { pathname } = location;
+    if (pathname.startsWith('/staff/board')) return 'board';
+    if (pathname.startsWith('/staff/settings')) return 'settings';
+    if (pathname.startsWith('/staff/tickets')) return 'tickets';
+    return 'dashboard';
+  }, [location.pathname]);
 
-  const handleBack = () => {
-    setSelectedTicketId(null);
-    setActiveView('dashboard');
-  };
-
-  const renderView = () => {
-    if (activeView === 'ticket-detail' && selectedTicketId) {
-      return <TicketDetailView ticketId={selectedTicketId} onBack={handleBack} />;
-    }
-    switch (activeView) {
+  const handleNavigate = (view: string) => {
+    switch (view) {
       case 'dashboard':
+        navigate('/staff/dashboard');
+        return;
       case 'tickets':
-        return <DashboardView onViewTicket={handleViewTicket} searchQuery={searchQuery} />;
+        navigate('/staff/tickets');
+        return;
       case 'board':
-        return <TeamBoardView onViewTicket={handleViewTicket} />;
+        navigate('/staff/board');
+        return;
       case 'settings':
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold text-foreground">Settings</h1>
-            <p className="text-sm text-muted-foreground mt-1">Application settings and configuration</p>
-          </div>
-        );
+        navigate('/staff/settings');
+        return;
       default:
-        return <DashboardView onViewTicket={handleViewTicket} searchQuery={searchQuery} />;
+        navigate('/staff/dashboard');
     }
+  };
+
+  const handleViewTicket = (id: string) => {
+    navigate(`/staff/tickets/${id}`);
   };
 
   return (
     <div className="flex min-h-screen w-full bg-surface">
-      <AppSidebar activeView={activeView} onNavigate={setActiveView} />
+      <AppSidebar activeView={activeView} onNavigate={handleNavigate} />
       <div className="flex-1 flex flex-col min-h-screen">
         <AppHeader
           onNewTicket={() => setShowCreateTicket(true)}
@@ -54,7 +71,28 @@ const Index = () => {
           onSearchChange={setSearchQuery}
         />
         <main className="flex-1 overflow-auto">
-          {renderView()}
+          <Routes>
+            <Route
+              path="dashboard"
+              element={<DashboardView onViewTicket={handleViewTicket} searchQuery={searchQuery} />}
+            />
+            <Route
+              path="tickets"
+              element={<DashboardView onViewTicket={handleViewTicket} searchQuery={searchQuery} />}
+            />
+            <Route path="board" element={<TeamBoardView onViewTicket={handleViewTicket} />} />
+            <Route
+              path="settings"
+              element={(
+                <div className="p-6">
+                  <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+                  <p className="text-sm text-muted-foreground mt-1">Application settings and configuration</p>
+                </div>
+              )}
+            />
+            <Route path="tickets/:ticketId" element={<StaffTicketDetailRoute />} />
+            <Route path="*" element={<Navigate to="/staff/dashboard" replace />} />
+          </Routes>
         </main>
       </div>
       <CreateTicketModal open={showCreateTicket} onClose={() => setShowCreateTicket(false)} />

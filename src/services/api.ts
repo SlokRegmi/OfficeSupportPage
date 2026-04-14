@@ -1,4 +1,5 @@
 import type { Ticket, ChatMessage } from '@/data/mockData';
+import type { AppUser } from '@/data/users';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
 
@@ -7,8 +8,28 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     ...options,
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+  if (!res.ok) {
+    let message = `API ${res.status}: ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (data?.message) {
+        message = data.message;
+      }
+    } catch {
+      // ignore JSON parse errors and keep fallback message
+    }
+    throw new Error(message);
+  }
   return res.json() as Promise<T>;
+}
+
+export interface AuthUser extends Omit<AppUser, 'password'> {}
+
+export interface SendMessagePayload {
+  content: string;
+  isInternal: boolean;
+  role?: 'employee' | 'client';
+  author?: string;
 }
 
 export interface StatsResponse {
@@ -18,6 +39,15 @@ export interface StatsResponse {
 }
 
 export const api = {
+  // Auth
+  login: (email: string, password: string) =>
+    request<AuthUser>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    }),
+  getUser: (id: string) => request<AuthUser>(`/auth/users/${id}`),
+  getDemoUsers: () => request<AuthUser[]>('/auth/demo-users'),
+
   // Tickets
   getTickets: () => request<Ticket[]>('/tickets'),
   getTicket: (id: string) => request<Ticket>(`/tickets/${id}`),
@@ -31,7 +61,7 @@ export const api = {
   // Messages
   getMessages: (ticketId: string) =>
     request<ChatMessage[]>(`/tickets/${ticketId}/messages`),
-  sendMessage: (ticketId: string, data: { content: string; isInternal: boolean }) =>
+  sendMessage: (ticketId: string, data: SendMessagePayload) =>
     request<ChatMessage>(`/tickets/${ticketId}/messages`, {
       method: 'POST',
       body: JSON.stringify(data),

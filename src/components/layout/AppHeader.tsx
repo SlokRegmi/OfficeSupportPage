@@ -1,9 +1,7 @@
-import { Search, Bell, Plus, ChevronDown, User, Wifi, WifiOff, LogOut } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useApiMode } from '@/context/ApiModeContext';
 import { useAuth } from '@/context/AuthContext';
-import { cn } from '@/lib/utils';
 
 interface AppHeaderProps {
   onNewTicket: () => void;
@@ -12,7 +10,6 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ onNewTicket, searchQuery = '', onSearchChange }: AppHeaderProps) {
-  const { isApiMode, toggleApiMode } = useApiMode();
   const { user, logout } = useAuth();
 
   return (
@@ -30,21 +27,6 @@ export function AppHeader({ onNewTicket, searchQuery = '', onSearchChange }: App
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        {/* API Mode Toggle */}
-        <button
-          onClick={toggleApiMode}
-          title={isApiMode ? 'Switch to Demo mode' : 'Switch to Live API mode'}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors',
-            isApiMode
-              ? 'bg-success/10 text-success border-success/30 hover:bg-success/20'
-              : 'bg-muted text-muted-foreground border-border hover:bg-accent'
-          )}
-        >
-          {isApiMode ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-          {isApiMode ? 'Live' : 'Demo'}
-        </button>
-
         <Button onClick={onNewTicket} size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" />
           New Ticket

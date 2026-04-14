@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { useTicket, useTicketMessages } from '@/hooks/useTicketsData';
-import { useApiMode } from '@/context/ApiModeContext';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import type { Priority, TicketStatus } from '@/data/mockData';
 
@@ -33,7 +33,7 @@ const statusStyles: Record<TicketStatus, string> = {
 export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailViewProps) {
   const { ticket, isLoading: ticketLoading } = useTicket(ticketId);
   const { messages, isLoading: msgsLoading } = useTicketMessages(ticketId);
-  const { isApiMode } = useApiMode();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const [replyText, setReplyText] = useState('');
@@ -43,17 +43,24 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
   const visibleMessages = messages.filter((m) => !m.isInternal);
 
   const handleSend = async () => {
-    if (!replyText.trim()) return;
-    if (isApiMode && ticket) {
-      setIsSending(true);
-      try {
-        await api.sendMessage(ticket.id, { content: replyText, isInternal: false });
-        setReplyText('');
-      } finally {
-        setIsSending(false);
-      }
-    } else {
+    if (!replyText.trim() || !ticket) return;
+
+    setIsSending(true);
+    try {
+      await api.sendMessage(ticket.id, {
+        content: replyText,
+        isInternal: false,
+        role: 'client',
+        author: user?.name,
+      });
       setReplyText('');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['messages', ticket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
+      ]);
+    } finally {
+      setIsSending(false);
     }
   };
 

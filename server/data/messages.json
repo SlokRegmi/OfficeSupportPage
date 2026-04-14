@@ -1,0 +1,58 @@
+{
+  "TKT-2401": [
+    {
+      "id": "1",
+      "author": "Rajesh Shrestha",
+      "role": "client",
+      "content": "Hi, the KYC form has been timing out since this morning. Our branch staff cannot process any KYC updates.",
+      "timestamp": "10:30 AM",
+      "isInternal": false
+    },
+    {
+      "id": "2",
+      "author": "Gaurav Shrestha",
+      "role": "employee",
+      "content": "Hello Rajesh. I can see the issue in our logs. It appears the document upload service is experiencing high latency. Let me investigate further.",
+      "timestamp": "10:45 AM",
+      "isInternal": false
+    },
+    {
+      "id": "3",
+      "author": "Gaurav Shrestha",
+      "role": "employee",
+      "content": "Checked with DevOps - the file storage service hit 95% capacity. Need to escalate to infra team for immediate expansion.",
+      "timestamp": "10:50 AM",
+      "isInternal": true
+    },
+    {
+      "id": "4",
+      "author": "Sujan Prajapati",
+      "role": "employee",
+      "content": "I can help with the infra side. Raising a P1 with the cloud team now. ETA for storage expansion: 2 hours.",
+      "timestamp": "11:05 AM",
+      "isInternal": true
+    },
+    {
+      "id": "5",
+      "author": "Gaurav Shrestha",
+      "role": "employee",
+      "content": "Rajesh, we have identified the root cause - a storage capacity issue on our end. Our infrastructure team is working on it and we expect resolution within 2 hours. I will keep you updated.",
+      "timestamp": "11:15 AM",
+      "isInternal": false
+    },
+    {
+      "id": "6",
+      "author": "Rajesh Shrestha",
+      "role": "client",
+      "content": "Thank you Gaurav. Please keep us posted. We have 50+ KYC updates pending across branches.",
+      "timestamp": "11:20 AM",
+      "isInternal": false
+    }
+  ],
+  "TKT-2398": [],
+  "TKT-2395": [],
+  "TKT-2390": [],
+  "TKT-2387": [],
+  "TKT-2380": [],
+  "TKT-2375": []
+}

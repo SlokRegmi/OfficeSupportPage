@@ -10,7 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useTicket, useTicketMessages } from '@/hooks/useTicketsData';
-import { useApiMode } from '@/context/ApiModeContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { cn } from '@/lib/utils';
 import type { Priority, TicketStatus } from '@/data/mockData';
@@ -42,7 +43,8 @@ const statusStyles: Record<TicketStatus, string> = {
 export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
   const { ticket, isLoading: ticketLoading } = useTicket(ticketId);
   const { messages, isLoading: msgsLoading } = useTicketMessages(ticketId);
-  const { isApiMode } = useApiMode();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [isInternal, setIsInternal] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -57,45 +59,60 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
 
   const handleStatusChange = async (status: string) => {
     setCurrentStatus(status as TicketStatus);
-    if (isApiMode && ticket) {
-      setIsUpdating(true);
-      try {
-        await api.updateTicketStatus(ticket.id, status);
-      } catch {
-        // revert on error
-        setCurrentStatus('');
-      } finally {
-        setIsUpdating(false);
-      }
+    if (!ticket) return;
+
+    setIsUpdating(true);
+    try {
+      await api.updateTicketStatus(ticket.id, status);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['stats'] }),
+      ]);
+    } catch {
+      setCurrentStatus(ticket.status);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleAssigneeChange = async (assignee: string) => {
     setCurrentAssignee(assignee);
-    if (isApiMode && ticket) {
-      setIsUpdating(true);
-      try {
-        await api.assignTicket(ticket.id, assignee === 'Unassigned' ? '' : assignee);
-      } catch {
-        setCurrentAssignee('');
-      } finally {
-        setIsUpdating(false);
-      }
+    if (!ticket) return;
+
+    setIsUpdating(true);
+    try {
+      await api.assignTicket(ticket.id, assignee === 'Unassigned' ? '' : assignee);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
+      ]);
+    } catch {
+      setCurrentAssignee(ticket.assignee ?? '');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const handleSend = async () => {
-    if (!replyText.trim()) return;
-    if (isApiMode && ticket) {
-      setIsSending(true);
-      try {
-        await api.sendMessage(ticket.id, { content: replyText, isInternal });
-        setReplyText('');
-      } finally {
-        setIsSending(false);
-      }
-    } else {
+    if (!replyText.trim() || !ticket) return;
+
+    setIsSending(true);
+    try {
+      await api.sendMessage(ticket.id, {
+        content: replyText,
+        isInternal,
+        author: user?.name,
+        role: user?.role === 'client' ? 'client' : 'employee',
+      });
       setReplyText('');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['messages', ticket.id] }),
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
+      ]);
+    } finally {
+      setIsSending(false);
     }
   };
 

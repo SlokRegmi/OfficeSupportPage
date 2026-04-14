@@ -9,8 +9,8 @@ import { Switch } from '@/components/ui/switch';
 import { Upload, FileText } from 'lucide-react';
 import { systemModules } from '@/data/mockData';
 import { api } from '@/services/api';
-import { useApiMode } from '@/context/ApiModeContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/context/AuthContext';
 
 interface CreateTicketModalProps {
   open: boolean;
@@ -18,7 +18,7 @@ interface CreateTicketModalProps {
 }
 
 export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
-  const { isApiMode } = useApiMode();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const [step, setStep] = useState(1);
@@ -58,22 +58,25 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
   };
 
   const handleSubmit = async () => {
-    if (isApiMode) {
-      setIsSubmitting(true);
-      try {
-        await api.createTicket({
-          title,
-          description,
-          priority: priority as any,
-          system,
-          module,
-          form,
-          environment: isProduction ? 'Production' : 'UAT',
-        });
-        await queryClient.invalidateQueries({ queryKey: ['tickets'] });
-      } finally {
-        setIsSubmitting(false);
-      }
+    setIsSubmitting(true);
+    try {
+      await api.createTicket({
+        title,
+        description,
+        priority: priority as any,
+        system,
+        module,
+        form,
+        environment: isProduction ? 'Production' : 'UAT',
+        reporter: user?.name,
+        reporterEmail: user?.email,
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tickets'] }),
+        queryClient.invalidateQueries({ queryKey: ['stats'] }),
+      ]);
+    } finally {
+      setIsSubmitting(false);
     }
     onClose();
     reset();
@@ -204,11 +207,9 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
               </div>
               <button className="text-xs text-primary hover:underline">Remove</button>
             </div>
-            {isApiMode && (
-              <p className="text-xs text-muted-foreground">
-                Submitting will call <span className="font-mono">POST /api/tickets</span>
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Submitting will call <span className="font-mono">POST /api/tickets</span>
+            </p>
           </div>
         )}
 
