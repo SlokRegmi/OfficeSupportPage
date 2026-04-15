@@ -81,6 +81,20 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
     });
   };
 
+  const readFileAsBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Unable to read file content.'));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     addFiles(event.dataTransfer.files);
@@ -98,9 +112,19 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      const attachmentsPayload = await Promise.all(
+        attachments.map(async (file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          content: await readFileAsBase64(file),
+        })),
+      );
+
       await api.createTicket({
         title,
         description,
+        bankName: user?.bankName,
         priority: priority as any,
         system,
         module,
@@ -108,11 +132,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
         environment: isProduction ? 'Production' : 'UAT',
         reporter: user?.name,
         reporterEmail: user?.email,
-        attachments: attachments.map((file) => ({
-          name: file.name,
-          size: file.size,
-          type: file.type || 'application/octet-stream',
-        })),
+        attachments: attachmentsPayload,
       });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['tickets'] }),

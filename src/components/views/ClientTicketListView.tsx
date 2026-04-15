@@ -62,8 +62,16 @@ export function ClientTicketListView({ onViewTicket }: ClientTicketListViewProps
   const { tickets, isLoading } = useTickets();
 
   const myTickets = useMemo(() => {
-    if (!user?.bankDomain) return [];
-    return tickets.filter((t) => t.reporterEmail.endsWith(`@${user.bankDomain}`));
+    if (!user?.bankDomain && !user?.bankName) return [];
+    const bankDomain = user?.bankDomain?.toLowerCase();
+    const bankName = user?.bankName?.toLowerCase();
+
+    return tickets.filter((t) => {
+      const reporterEmail = t.reporterEmail.toLowerCase();
+      const emailMatches = bankDomain ? reporterEmail.endsWith(`@${bankDomain}`) : false;
+      const bankNameMatches = bankName ? String(t.bankName ?? '').toLowerCase() === bankName : false;
+      return emailMatches || bankNameMatches;
+    });
   }, [tickets, user]);
 
   const openCount = myTickets.filter((t) => t.status === 'Open').length;

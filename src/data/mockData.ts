@@ -6,6 +6,7 @@ export interface AttachmentMetadata {
   name: string;
   size: number;
   type: string;
+  url?: string;
 }
 
 export interface Ticket {

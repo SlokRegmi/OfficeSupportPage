@@ -98,13 +98,12 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel */}
-        <div className="w-72 border-r border-border bg-surface p-5 overflow-y-auto shrink-0 space-y-5 scrollbar-thin">
+        <div className="w-72 border-r border-border bg-surface p-5 shrink-0 space-y-5 scrollbar-thin">
           <Section title="Details">
             <DetailRow icon={Tag} label="System" value={ticket.system} />
             <DetailRow icon={Tag} label="Module" value={ticket.module} />
-            <DetailRow icon={Tag} label="Form" value={ticket.form} />
             <DetailRow icon={Monitor} label="Environment" value={ticket.environment} highlight={ticket.environment === 'Production'} />
             <DetailRow icon={Clock} label="Created" value={ticket.createdAt} />
             <DetailRow icon={User} label="Assignee" value={ticket.assignee || 'Awaiting assignment'} />
@@ -132,14 +131,14 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
         </div>
 
         {/* Right Panel - Chat */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           <div className="px-5 py-3 border-b border-border bg-card shrink-0">
             <h3 className="text-sm font-semibold text-foreground">Support Conversation</h3>
             <p className="text-xs text-muted-foreground">Messages between you and the Inorins support team</p>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4 scrollbar-thin">
             {msgsLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className={cn('max-w-[80%] space-y-2', i % 2 === 0 ? '' : 'ml-auto')}>
