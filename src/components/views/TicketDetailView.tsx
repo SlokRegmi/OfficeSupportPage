@@ -40,6 +40,21 @@ const statusStyles: Record<TicketStatus, string> = {
   Closed: 'bg-muted text-muted-foreground border-border',
 };
 
+function deriveBankName(bankName: string | undefined, reporterEmail: string) {
+  if (bankName?.trim()) return bankName;
+  const email = String(reporterEmail ?? '').toLowerCase();
+  const domain = email.includes('@') ? email.split('@')[1] : '';
+  const map: Record<string, string> = {
+    'guheshwori.com.np': 'Guheshwori',
+    'reliancebank.com.np': 'Reliance',
+    'progressivebank.com.np': 'Progressive',
+    'ganapatibank.com.np': 'Ganapati',
+    'goodwillbank.com.np': 'Goodwill',
+    'shreefinance.com.np': 'Shree Finance',
+  };
+  return map[domain] ?? 'Inorins';
+}
+
 export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
   const { ticket, isLoading: ticketLoading } = useTicket(ticketId);
   const { messages, isLoading: msgsLoading } = useTicketMessages(ticketId);
@@ -153,9 +168,9 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel - Details */}
-        <div className="w-80 border-r border-border bg-surface p-5 overflow-y-auto shrink-0 space-y-5 scrollbar-thin">
+        <div className="w-80 border-r border-border bg-surface p-5 shrink-0 space-y-5 scrollbar-thin">
           <Section title="Reporter">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">
@@ -170,6 +185,7 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
 
           <Section title="Details">
             <DetailRow icon={Tag} label="System" value={ticket.system} />
+            <DetailRow icon={Tag} label="Bank" value={deriveBankName(ticket.bankName, ticket.reporterEmail)} />
             <DetailRow icon={Tag} label="Module" value={ticket.module} />
             <DetailRow icon={Tag} label="Form" value={ticket.form} />
             <DetailRow icon={Monitor} label="Environment" value={ticket.environment} highlight={ticket.environment === 'Production'} />
@@ -210,14 +226,34 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
 
           <Section title="Attachments">
             {ticket.attachments?.length ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 {ticket.attachments.map((attachment) => (
-                  <div key={attachment.name} className="flex items-center gap-2 p-2.5 bg-card rounded-md border border-border">
-                    <Paperclip className="h-4 w-4 text-primary" />
-                    <div className="min-w-0">
-                      <p className="text-sm text-foreground truncate">{attachment.name}</p>
-                      <p className="text-xs text-muted-foreground">{(attachment.size / 1024).toFixed(1)} KB</p>
+                  <div key={attachment.name} className="space-y-2 p-3 bg-card rounded-md border border-border">
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="h-4 w-4 text-primary" />
+                      <div className="min-w-0">
+                        <p className="text-sm text-foreground truncate">{attachment.name}</p>
+                        <p className="text-xs text-muted-foreground">{(attachment.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                      {attachment.url ? (
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          download={attachment.name}
+                          className="text-xs text-primary hover:underline"
+                        >
+                          View
+                        </a>
+                      ) : null}
                     </div>
+                    {attachment.url && attachment.type.startsWith('image/') ? (
+                      <img
+                        src={attachment.url}
+                        alt={attachment.name}
+                        className="w-full max-h-48 object-contain rounded-md border border-border"
+                      />
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -228,13 +264,13 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
         </div>
 
         {/* Right Panel - Chat */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           <div className="px-5 py-3 border-b border-border bg-card shrink-0">
             <h3 className="text-sm font-semibold text-foreground">Communication Timeline</h3>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-4 scrollbar-thin">
             {msgsLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className={cn('max-w-[80%] space-y-2', i % 2 === 0 ? '' : 'ml-auto')}>

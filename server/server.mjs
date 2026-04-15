@@ -17,7 +17,8 @@ const ROLES = new Set(["inorins", "client"]);
 const MESSAGE_ROLES = new Set(["employee", "client"]);
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 function sanitizeUser(user) {
   if (!user) {
@@ -111,6 +112,15 @@ function nextTicketId(tickets) {
   }, 2400);
 
   return `TKT-${maxTicketNumber + 1}`;
+}
+
+async function deriveBankNameFromEmail(email) {
+  const normalized = String(email ?? '').trim().toLowerCase();
+  if (!normalized.includes('@')) return undefined;
+  const [, domain] = normalized.split('@');
+  const users = await loadUsers();
+  const matched = users.find((user) => user.bankDomain?.toLowerCase() === domain);
+  return matched?.bankName;
 }
 
 async function updateTicketById(ticketId, updater) {
@@ -214,7 +224,8 @@ app.post("/api/tickets", async (req, res, next) => {
     const payload = req.body ?? {};
 
     const title = String(payload.title ?? "").trim();
-    const bankName = String(payload.bankName ?? "").trim();
+    const requestedBankName = String(payload.bankName ?? "").trim();
+    const reporterEmail = String(payload.reporterEmail ?? "").trim();
     const system = String(payload.system ?? "").trim();
     const module = String(payload.module ?? "").trim();
     const form = String(payload.form ?? "").trim();
@@ -226,15 +237,46 @@ app.post("/api/tickets", async (req, res, next) => {
 
     const priority = PRIORITIES.has(payload.priority) ? payload.priority : "Medium";
     const environment = payload.environment === "Production" ? "Production" : "UAT";
-    const attachments = Array.isArray(payload.attachments)
-      ? payload.attachments.filter(
-          (item) => item && typeof item.name === "string" && typeof item.size === "number"
-        )
-      : [];
+    const inferredBankName = await deriveBankNameFromEmail(reporterEmail);
+    const bankName = requestedBankName || inferredBankName || '';
 
     const tickets = await loadTickets();
+    const ticketId = nextTicketId(tickets);
+    const uploadDir = path.join(__dirname, 'uploads', ticketId);
+
+    const attachments = [];
+    if (Array.isArray(payload.attachments)) {
+      await fs.mkdir(uploadDir, { recursive: true });
+      for (const item of payload.attachments) {
+        if (
+          item &&
+          typeof item.name === 'string' &&
+          typeof item.size === 'number' &&
+          typeof item.type === 'string'
+        ) {
+          const attachment = {
+            name: item.name,
+            size: item.size,
+            type: item.type,
+          };
+
+          if (typeof item.content === 'string') {
+            const base64 = item.content.split(',').pop() ?? '';
+            const buffer = Buffer.from(base64, 'base64');
+            const safeName = path.basename(item.name);
+            const savedName = `${Date.now()}-${safeName}`;
+            const filePath = path.join(uploadDir, savedName);
+            await fs.writeFile(filePath, buffer);
+            attachment.url = `/uploads/${ticketId}/${encodeURIComponent(savedName)}`;
+          }
+
+          attachments.push(attachment);
+        }
+      }
+    }
+
     const ticket = {
-      id: nextTicketId(tickets),
+      id: ticketId,
       title,
       bankName: bankName || undefined,
       system,

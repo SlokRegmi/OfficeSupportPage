@@ -7,10 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTickets } from '@/hooks/useTicketsData';
+import { useAuth } from '@/context/AuthContext';
 import type { Priority, TicketStatus, Ticket } from '@/data/mockData';
 import { cn } from '@/lib/utils';
-
-const CURRENT_USER_ASSIGNEE = 'Gaurav Shrestha';
 
 const SLA_HOURS: Record<Priority, number> = {
   Critical: 4,
@@ -36,10 +35,28 @@ function getSLAInfo(ticket: Ticket): { label: string; className: string } {
   return { label: `${Math.ceil(hoursLeft)}h left`, className: 'text-success' };
 }
 
+const EMAIL_BANK_MAP: Record<string, string> = {
+  'guheshwori.com.np': 'Guheshwori',
+  'reliancebank.com.np': 'Reliance',
+  'progressivebank.com.np': 'Progressive',
+  'ganapatibank.com.np': 'Ganapati',
+  'goodwillbank.com.np': 'Goodwill',
+  'shreefinance.com.np': 'Shree Finance',
+};
+
+function resolveTicketBankName(ticket: Ticket) {
+  if (ticket.bankName?.trim()) {
+    return ticket.bankName;
+  }
+  const email = String(ticket.reporterEmail ?? '').toLowerCase();
+  const domain = email.includes('@') ? email.split('@')[1] : '';
+  return EMAIL_BANK_MAP[domain] ?? 'Inorins';
+}
+
 function exportToCSV(data: Ticket[]) {
-  const headers = ['ID', 'Title', 'System', 'Module', 'Priority', 'Status', 'Environment', 'Reporter', 'Assignee', 'Created'];
+  const headers = ['ID', 'Title', 'System', 'Bank', 'Module', 'Priority', 'Status', 'Environment', 'Reporter', 'Assignee', 'Created'];
   const rows = data.map((t) => [
-    t.id, t.title, t.system, t.module, t.priority, t.status,
+    t.id, t.title, t.system, resolveTicketBankName(t), t.module, t.priority, t.status,
     t.environment, t.reporter, t.assignee ?? '', t.createdAt,
   ]);
   const csv = [headers, ...rows]
@@ -83,6 +100,7 @@ interface DashboardViewProps {
 export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewProps) {
   const { tickets, isLoading, isError, refetch } = useTickets();
 
+  const { user } = useAuth();
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSystem, setFilterSystem] = useState<string>('all');
@@ -95,7 +113,10 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
       if (filterStatus !== 'all' && t.status !== filterStatus) return false;
       if (filterSystem !== 'all' && t.system !== filterSystem) return false;
-      if (myTicketsOnly && t.assignee !== CURRENT_USER_ASSIGNEE) return false;
+      if (myTicketsOnly) {
+        const currentAssignee = user?.name?.toLowerCase() ?? '';
+        if (!currentAssignee || t.assignee?.toLowerCase() !== currentAssignee) return false;
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
@@ -107,7 +128,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       }
       return true;
     });
-  }, [tickets, filterPriority, filterStatus, filterSystem, myTicketsOnly, searchQuery]);
+  }, [tickets, filterPriority, filterStatus, filterSystem, myTicketsOnly, searchQuery, user]);
 
   const kpiCards = useMemo(() => [
     {
@@ -278,6 +299,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">ID</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Title</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">System</th>
+                <th className="text-left px-5 py-3 font-medium text-muted-foreground">Bank</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Priority</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Status</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">SLA</th>
@@ -288,7 +310,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border last:border-0">
-                    {Array.from({ length: 7 }).map((__, j) => (
+                    {Array.from({ length: 8 }).map((__, j) => (
                       <td key={j} className="px-5 py-3.5">
                         <div className="h-4 bg-muted rounded animate-pulse w-24" />
                       </td>
@@ -297,7 +319,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">
                     No tickets match the current filters.
                   </td>
                 </tr>
@@ -317,6 +339,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
                           {t.system}
                         </span>
                       </td>
+                      <td className="px-5 py-3.5 text-sm text-foreground">{resolveTicketBankName(t)}</td>
                       <td className="px-5 py-3.5"><PriorityBadge priority={t.priority} /></td>
                       <td className="px-5 py-3.5"><StatusBadge status={t.status} /></td>
                       <td className={cn('px-5 py-3.5 text-xs', sla.className)}>{sla.label}</td>
