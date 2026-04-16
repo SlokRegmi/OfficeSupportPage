@@ -170,7 +170,7 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
       {/* Body */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel - Details */}
-        <div className="w-80 border-r border-border bg-surface p-5 shrink-0 space-y-5 scrollbar-thin">
+        <div className="w-80 border-r border-border bg-surface p-5 shrink-0 space-y-5 overflow-y-auto min-h-0 scrollbar-thin">
           <Section title="Reporter">
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center">

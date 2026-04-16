@@ -100,7 +100,7 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
       {/* Body */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Left Panel */}
-        <div className="w-72 border-r border-border bg-surface p-5 shrink-0 space-y-5 scrollbar-thin">
+        <div className="w-72 border-r border-border bg-surface p-5 shrink-0 space-y-5 overflow-y-auto min-h-0 scrollbar-thin">
           <Section title="Details">
             <DetailRow icon={Tag} label="System" value={ticket.system} />
             <DetailRow icon={Tag} label="Module" value={ticket.module} />
