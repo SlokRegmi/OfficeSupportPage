@@ -98,7 +98,7 @@ interface DashboardViewProps {
 }
 
 export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewProps) {
-  const { tickets, isLoading, isError, refetch } = useTickets();
+  const { tickets, isLoading, isFetching, isError, refetch } = useTickets();
 
   const { user } = useAuth();
   const [filterPriority, setFilterPriority] = useState<string>('all');
@@ -138,7 +138,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       accent: 'text-primary',
     },
     {
-      label: 'Resolved this Week',
+      label: 'Total Resolved',
       value: tickets.filter((t) => t.status === 'Resolved').length,
       icon: TicketCheck,
       accent: 'text-success',
@@ -183,7 +183,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
             className="gap-1.5"
             onClick={() => refetch()}
           >
-            <RefreshCw className={cn('h-3.5 w-3.5', isLoading && 'animate-spin')} />
+            <RefreshCw className={cn('h-3.5 w-3.5', isFetching && 'animate-spin')} />
             Refresh
           </Button>
         </div>

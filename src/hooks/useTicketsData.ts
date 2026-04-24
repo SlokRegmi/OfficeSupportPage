@@ -13,6 +13,7 @@ export function useTickets() {
   return {
     tickets: query.data ?? [],
     isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     refetch: () => queryClient.invalidateQueries({ queryKey: ['tickets'] }),
   };
@@ -29,6 +30,7 @@ export function useTicket(id: string) {
   return {
     ticket: query.data ?? null,
     isLoading: query.isLoading,
+    isError: query.isError,
   };
 }
 
@@ -43,6 +45,7 @@ export function useTicketMessages(ticketId: string) {
   return {
     messages: query.data ?? [],
     isLoading: query.isLoading,
+    isError: query.isError,
   };
 }
 

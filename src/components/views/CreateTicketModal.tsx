@@ -35,6 +35,7 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const modules = system ? Object.keys(systemModules[system] || {}) : [];
   const forms = system && module ? systemModules[system]?.[module] || [] : [];
@@ -97,8 +98,8 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
     event.target.value = '';
   };
 
-  const removeAttachment = (fileName: string) => {
-    setAttachments((current) => current.filter((file) => file.name !== fileName));
+  const removeAttachment = (index: number) => {
+    setAttachments((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSystemChange = (val: string) => {
@@ -125,11 +126,13 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
     setIsProduction(false);
     setAttachments([]);
     setUploadError('');
+    setSubmitError('');
     setIsSubmitting(false);
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError('');
     try {
       const attachmentsPayload = await Promise.all(
         attachments.map(async (file) => ({
@@ -145,7 +148,7 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
         bankName,
         description,
         requestType,
-        priority: priority as any,
+        priority: priority as 'Critical' | 'High' | 'Medium' | 'Low',
         system,
         module,
         form,
@@ -158,11 +161,13 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
         queryClient.invalidateQueries({ queryKey: ['tickets'] }),
         queryClient.invalidateQueries({ queryKey: ['stats'] }),
       ]);
+      onClose();
+      reset();
+    } catch {
+      setSubmitError('Failed to submit the ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-    onClose();
-    reset();
   };
 
   return (
@@ -326,8 +331,8 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
             ) : null}
             {attachments.length > 0 ? (
               <div className="space-y-2">
-                {attachments.map((file) => (
-                  <div key={file.name} className="flex items-center gap-3 p-3 bg-surface rounded-md border border-border">
+                {attachments.map((file, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-md border border-border">
                     <FileText className="h-5 w-5 text-primary" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
@@ -336,7 +341,7 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
                     <button
                       type="button"
                       className="text-xs text-primary hover:underline"
-                      onClick={() => removeAttachment(file.name)}
+                      onClick={() => removeAttachment(idx)}
                     >
                       Remove
                     </button>
@@ -349,9 +354,9 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
                 <p className="text-sm text-muted-foreground">No attachments selected yet.</p>
               </div>
             )}
-            <p className="text-xs text-muted-foreground">
-              Submitting will call <span className="font-mono">POST /api/tickets</span>
-            </p>
+            {submitError ? (
+              <p className="text-xs text-destructive">{submitError}</p>
+            ) : null}
           </div>
         )}
 
@@ -367,7 +372,7 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
           <Button
             onClick={() => step < 3 ? setStep(step + 1) : handleSubmit()}
             size="sm"
-            disabled={isSubmitting}
+            disabled={isSubmitting || (step === 1 && (!title.trim() || !priority))}
           >
             {step === 3 ? (isSubmitting ? 'Submitting…' : 'Submit Ticket') : 'Next'}
           </Button>

@@ -37,6 +37,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
   const [moduleDetails, setModuleDetails] = useState('');
   const [form, setForm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState('');
 
@@ -123,12 +124,13 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
     event.target.value = '';
   };
 
-  const removeAttachment = (fileName: string) => {
-    setAttachments((current) => current.filter((file) => file.name !== fileName));
+  const removeAttachment = (index: number) => {
+    setAttachments((current) => current.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setSubmitError('');
     try {
       const attachmentsPayload = await Promise.all(
         attachments.map(async (file) => ({
@@ -143,7 +145,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
         title,
         description,
         bankName: user?.bankName,
-        priority: priority as any,
+        priority: priority as 'Critical' | 'High' | 'Medium' | 'Low',
         system,
         module,
         moduleDetails,
@@ -160,6 +162,8 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
         queryClient.invalidateQueries({ queryKey: ['stats'] }),
       ]);
       setSubmitted(true);
+    } catch {
+      setSubmitError('Failed to submit the ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -176,15 +180,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
         </p>
         <div className="flex gap-3">
           <Button variant="outline" onClick={onSuccess}>View My Tickets</Button>
-          <Button onClick={() => {
-            setSubmitted(false);
-            setStep(1);
-            setRequestType('Issue');
-            setRequestedDelivery('Flexible');
-            setTitle(''); setDescription(''); setPriority('');
-            setIsProduction(false);
-            setSystem(''); setModule(''); setModuleDetails(''); setForm('');
-          }}>
+          <Button onClick={() => { setSubmitted(false); resetForm(); }}>
             Submit Another
           </Button>
         </div>
@@ -396,11 +392,12 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
           </div>
 
           {uploadError ? <p className="text-xs text-destructive">{uploadError}</p> : null}
+          {submitError ? <p className="text-xs text-destructive">{submitError}</p> : null}
 
           {attachments.length > 0 ? (
             <div className="space-y-2">
-              {attachments.map((file) => (
-                <div key={file.name} className="flex items-center gap-3 p-3 bg-surface rounded-md border border-border">
+              {attachments.map((file, idx) => (
+                <div key={idx} className="flex items-center gap-3 p-3 bg-surface rounded-md border border-border">
                   <FileText className="h-5 w-5 text-primary" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
@@ -409,7 +406,7 @@ export function ClientNewTicketView({ onSuccess }: ClientNewTicketViewProps) {
                   <button
                     type="button"
                     className="text-xs text-primary hover:underline"
-                    onClick={() => removeAttachment(file.name)}
+                    onClick={() => removeAttachment(idx)}
                   >
                     Remove
                   </button>

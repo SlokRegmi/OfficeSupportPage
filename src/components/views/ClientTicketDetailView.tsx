@@ -7,6 +7,7 @@ import { useTicket, useTicketMessages } from '@/hooks/useTicketsData';
 import { useAuth } from '@/context/AuthContext';
 import { api } from '@/services/api';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import type { Priority, TicketStatus } from '@/data/mockData';
 
@@ -34,10 +35,12 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
   const { ticket, isLoading: ticketLoading } = useTicket(ticketId);
   const { messages, isLoading: msgsLoading } = useTicketMessages(ticketId);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   // Clients never see internal notes
   const visibleMessages = messages.filter((m) => !m.isInternal);
@@ -46,6 +49,7 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
     if (!replyText.trim() || !ticket) return;
 
     setIsSending(true);
+    setSendError('');
     try {
       await api.sendMessage(ticket.id, {
         content: replyText,
@@ -59,6 +63,8 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
         queryClient.invalidateQueries({ queryKey: ['tickets'] }),
         queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
       ]);
+    } catch {
+      setSendError('Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
     }
@@ -117,10 +123,21 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
           </Section>
 
           <Section title="Attachments">
-            <div className="flex items-center gap-2 p-2.5 bg-card rounded-md border border-border">
-              <Paperclip className="h-4 w-4 text-primary" />
-              <span className="text-sm text-foreground">error_screenshot.png</span>
-            </div>
+            {ticket.attachments?.length ? (
+              <div className="space-y-2">
+                {ticket.attachments.map((att) => (
+                  <div key={att.name} className="flex items-center gap-2 p-2.5 bg-card rounded-md border border-border">
+                    <Paperclip className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-foreground truncate flex-1">{att.name}</span>
+                    {att.url ? (
+                      <a href={att.url} target="_blank" rel="noreferrer" download={att.name} className="text-xs text-primary hover:underline shrink-0">View</a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No attachments.</p>
+            )}
           </Section>
 
           {ticket.status === 'Pending Client' && (
@@ -183,7 +200,10 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
           {/* Reply box */}
           {ticket.status !== 'Closed' && (
             <div className="border-t border-border p-4 shrink-0 bg-card">
-              <div className="flex gap-2">
+              {sendError ? (
+              <p className="text-xs text-destructive mb-2">{sendError}</p>
+            ) : null}
+            <div className="flex gap-2">
                 <Textarea
                   placeholder="Type your message to the support team…"
                   rows={2}
@@ -210,7 +230,7 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
           {ticket.status === 'Closed' && (
             <div className="border-t border-border p-4 shrink-0 bg-surface">
               <p className="text-xs text-center text-muted-foreground">
-                This ticket is closed. <button className="text-primary hover:underline">Open a new ticket</button> if you need further assistance.
+                This ticket is closed. <button className="text-primary hover:underline" onClick={() => navigate('/client/tickets/new')}>Open a new ticket</button> if you need further assistance.
               </p>
             </div>
           )}

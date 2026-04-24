@@ -3,9 +3,28 @@ import type { AppUser } from '@/data/users';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
 
+const TOKEN_KEY = 'inorins_session_token';
+
+export function setAuthToken(token: string | null): void {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+function getAuthToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getAuthToken();
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers,
+    },
     ...options,
   });
   if (!res.ok) {
@@ -40,11 +59,14 @@ export interface StatsResponse {
 
 export const api = {
   // Auth
-  login: (email: string, password: string) =>
-    request<AuthUser>('/auth/login', {
+  login: async (email: string, password: string): Promise<AuthUser> => {
+    const result = await request<{ user: AuthUser; token: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    }),
+    });
+    setAuthToken(result.token);
+    return result.user;
+  },
   getUser: (id: string) => request<AuthUser>(`/auth/users/${id}`),
   getDemoUsers: () => request<AuthUser[]>('/auth/demo-users'),
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Shield, Building2, Users, Eye, EyeOff, ChevronRight } from 'lucide-react';
+import { Shield, Building2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,8 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import { api } from '@/services/api';
 import type { AuthUser } from '@/services/api';
-
-const DEMO_PASSWORD = 'demo123';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -50,12 +48,6 @@ export function LoginPage() {
     const result = await login(email.trim(), password);
     setIsLoading(false);
     if (!result.success) setError(result.error ?? 'Login failed.');
-  };
-
-  const quickLogin = (user: AuthUser) => {
-    setEmail(user.email);
-    setPassword(DEMO_PASSWORD);
-    setError('');
   };
 
   return (

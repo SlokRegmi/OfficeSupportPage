@@ -1,20 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
-import React from "react";
+import React, { useState } from "react";
 import { useAppContext } from "../../context/state";
 
 export default function Header(): JSX.Element {
   const { top } = useAppContext();
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggleMobileMenu = () => {
-    const menu = document.querySelector("#mobile-menu");
-    menu?.classList.toggle("hidden");
-  };
-
-  const closeMobileMenu = () => {
-    const menu = document.querySelector("#mobile-menu");
-    menu?.classList.add("hidden");
-  };
+  const toggleMobileMenu = () => setMobileOpen((v) => !v);
+  const closeMobileMenu = () => setMobileOpen(false);
 
   const handleNavClick = (sectionId: string) => {
     closeMobileMenu();
@@ -70,7 +64,7 @@ export default function Header(): JSX.Element {
           </svg>
         </button>
         <div
-          className="hidden fixed left-0 top-0 md:relative w-60 md:block md:w-auto bg-slate-800 md:bg-transparent h-full z-10 transition-all duration-200 ease-linear"
+          className={`${mobileOpen ? 'block' : 'hidden'} fixed left-0 top-0 md:relative w-60 md:block md:w-auto bg-slate-800 md:bg-transparent h-full z-10 transition-all duration-200 ease-linear`}
           id="mobile-menu"
         >
           <button

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '@/services/api';
+import { api, setAuthToken } from '@/services/api';
 import type { AuthUser } from '@/services/api';
 
 interface LoginResult {
@@ -66,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
+    setAuthToken(null);
   };
 
   return (

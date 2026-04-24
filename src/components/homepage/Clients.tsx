@@ -116,7 +116,7 @@ export default function Clients(): JSX.Element {
           <a href={item?.site} target="_blank" rel="noreferrer">
             <img
               src={item?.image}
-              alt="1"
+              alt={item?.name}
               className="h-14 w-full object-contain"
             />
             <span className="block text-center mt-4 text-gray-900">

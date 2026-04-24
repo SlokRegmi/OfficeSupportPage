@@ -70,6 +70,7 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
   const [isInternal, setIsInternal] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   const [currentStatus, setCurrentStatus] = useState<TicketStatus | ''>('');
   const [currentAssignee, setCurrentAssignee] = useState<string>('');
@@ -120,6 +121,7 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
     if (!replyText.trim() || !ticket) return;
 
     setIsSending(true);
+    setSendError('');
     try {
       await api.sendMessage(ticket.id, {
         content: replyText,
@@ -133,6 +135,8 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
         queryClient.invalidateQueries({ queryKey: ['tickets'] }),
         queryClient.invalidateQueries({ queryKey: ['ticket', ticket.id] }),
       ]);
+    } catch {
+      setSendError('Failed to send message. Please try again.');
     } finally {
       setIsSending(false);
     }
@@ -329,6 +333,9 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
                 </span>
               </div>
             </div>
+            {sendError ? (
+              <p className="text-xs text-destructive mb-2">{sendError}</p>
+            ) : null}
             <div className="flex gap-2">
               <Textarea
                 placeholder={isInternal ? 'Write an internal note…' : 'Type your reply to the client…'}
