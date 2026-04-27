@@ -9,6 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useTicket, useTicketMessages } from '@/hooks/useTicketsData';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
@@ -75,15 +79,16 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
   const [currentStatus, setCurrentStatus] = useState<TicketStatus | ''>('');
   const [currentAssignee, setCurrentAssignee] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<TicketStatus | null>(null);
 
   const displayStatus = (currentStatus || ticket?.status) as TicketStatus;
   const displayAssignee = currentAssignee || ticket?.assignee || 'Unassigned';
   const displayRequestType = (ticket?.requestType ?? 'Issue') as 'Issue' | 'Add Form' | 'Add Report';
+  const isLocked = displayStatus === 'Resolved' || displayStatus === 'Closed';
 
-  const handleStatusChange = async (status: string) => {
-    setCurrentStatus(status as TicketStatus);
+  const applyStatusChange = async (status: TicketStatus) => {
+    setCurrentStatus(status);
     if (!ticket) return;
-
     setIsUpdating(true);
     try {
       await api.updateTicketStatus(ticket.id, status);
@@ -96,6 +101,15 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
       setCurrentStatus(ticket.status);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleStatusChange = (status: string) => {
+    const next = status as TicketStatus;
+    if (next === 'Resolved' || next === 'Closed') {
+      setPendingStatus(next);
+    } else {
+      applyStatusChange(next);
     }
   };
 
@@ -203,34 +217,49 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
             <DetailRow icon={Tag} label="Form" value={ticket.form} />
             <DetailRow icon={Tag} label="Request Type" value={displayRequestType} />
             {ticket.requestedDelivery ? <DetailRow icon={Tag} label="Delivery" value={ticket.requestedDelivery} /> : null}
+            <DetailRow icon={Clock} label="Created" value={new Date(ticket.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Kathmandu' })} />
           </Section>
 
           {/* Editable Status */}
           <Section title="Status">
-            <Select value={displayStatus} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLocked ? (
+              <div className="flex items-center gap-2 h-8 px-3 rounded-md border border-border bg-muted/50 text-xs text-muted-foreground">
+                <span className="flex-1">{displayStatus}</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide">Locked</span>
+              </div>
+            ) : (
+              <Select value={displayStatus} onValueChange={handleStatusChange}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((s) => (
+                    <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </Section>
 
           {/* Editable Assignee */}
           <Section title="Assignee">
-            <Select value={displayAssignee} onValueChange={handleAssigneeChange}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TEAM_MEMBERS.map((m) => (
-                  <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLocked ? (
+              <div className="flex items-center gap-2 h-8 px-3 rounded-md border border-border bg-muted/50 text-xs text-muted-foreground">
+                <span className="flex-1">{displayAssignee}</span>
+                <span className="text-[10px] font-medium uppercase tracking-wide">Locked</span>
+              </div>
+            ) : (
+              <Select value={displayAssignee} onValueChange={handleAssigneeChange}>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TEAM_MEMBERS.map((m) => (
+                    <SelectItem key={m} value={m} className="text-xs">{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </Section>
 
           <Section title="Description">
@@ -360,6 +389,28 @@ export function TicketDetailView({ ticketId, onBack }: TicketDetailViewProps) {
           </div>
         </div>
       </div>
+
+      <AlertDialog open={!!pendingStatus} onOpenChange={(open) => { if (!open) setPendingStatus(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark as {pendingStatus}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This ticket will be marked as <strong>{pendingStatus}</strong> and the status cannot be changed afterwards. Are you sure?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingStatus) applyStatusChange(pendingStatus);
+                setPendingStatus(null);
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

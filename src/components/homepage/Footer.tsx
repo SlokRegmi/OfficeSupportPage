@@ -1,4 +1,5 @@
 import React from "react";
+import { Facebook, Linkedin, Mail } from "lucide-react";
 import { useAppContext } from "../../context/state";
 
 export default function Footer(): JSX.Element {
@@ -58,25 +59,25 @@ export default function Footer(): JSX.Element {
               <div className="flex sm:justify-center md:justify-start space-x-3">
                 <a
                   href="https://www.facebook.com/InorinsTech"
-                  target={"_blank"}
+                  target="_blank"
                   rel="noreferrer"
                   className="w-9 h-9 border-2 border-gray-400 rounded-full flex items-center justify-center text-gray-600 hover:text-white hover:bg-blue-600 hover:border-blue-600"
                 >
-                  <i className="fab fa-facebook-f text-xl"></i>
+                  <Facebook className="w-4 h-4" />
                 </a>
                 <a
                   href="https://www.linkedin.com/"
-                  target={"_blank"}
+                  target="_blank"
                   rel="noreferrer"
                   className="w-9 h-9 border-2 border-gray-400 rounded-full flex items-center justify-center text-gray-600 hover:text-white hover:bg-blue-700 hover:border-blue-700"
                 >
-                  <i className="fab fa-linkedin-in text-xl"></i>
+                  <Linkedin className="w-4 h-4" />
                 </a>
                 <a
                   href="mailto:inorinsttechcbs@gmail.com"
                   className="w-9 h-9 border-2 border-gray-400 rounded-full flex items-center justify-center text-gray-600 hover:text-white hover:bg-red-600 hover:border-red-600"
                 >
-                  <i className="fab fa-google text-xl"></i>
+                  <Mail className="w-4 h-4" />
                 </a>
               </div>
             </div>

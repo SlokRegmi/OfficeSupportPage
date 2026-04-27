@@ -98,17 +98,14 @@ export function ClientPortal() {
 
 function FaqView() {
   const faqs = [
-    {
-      q: 'How long does it take to resolve a Critical ticket?',
-      a: 'Critical tickets (system-down) are assigned within 30 minutes and targeted for resolution within 4 hours.',
-    },
+    
     {
       q: 'What is the difference between UAT and Production tickets?',
       a: 'UAT issues affect your test environment. Production issues affect live operations and receive higher priority.',
     },
     {
       q: 'Can I add attachments after submitting a ticket?',
-      a: 'Yes — open the ticket and use the message box to attach files in a follow-up message.',
+      a: 'No — attachments must be added during the submission of the tickets.',
     },
     {
       q: 'Who should I contact for urgent escalation?',
@@ -116,7 +113,7 @@ function FaqView() {
     },
     {
       q: 'How do I check if the issue is from the CBS, ECL or DCH system?',
-      a: 'CBS covers core banking (accounts, loans, users). ECL is for provisioning and IFRS9 reporting. DCH handles reconciliation and settlement.',
+      a: 'CBS covers core banking (accounts, loans, users). ECL is for provisioning and reporting. DCH handles reconciliation and settlement.',
     },
   ];
 

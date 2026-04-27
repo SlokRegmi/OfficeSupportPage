@@ -219,12 +219,396 @@ export const systemModules: Record<string, Record<string, string[]>> = {
     ]
 
   },
-  ECL: {
-    'Provisioning': ['Model Config', 'Stage Migration', 'Override Rules'],
-    'Reporting': ['IFRS9 Report', 'Regulatory Filing', 'Variance Analysis'],
-  },
+ ECL: {
+  'Economic Indicators': [
+    'Indicators List',
+    'Indicator Configuration',
+    'Trend Probability Configuration',
+    'Macro-economic Data',
+    'Macro-economic Effect Assessment',
+    'Reports'
+  ],
+
+  'Portfolios': [
+    'Portfolio List',
+    'Portfolio Configuration',
+    'Portfolio wise Economic Index Configuration',
+    'Portfolio Segmentation Rules',
+    'Reports'
+  ],
+
+  'Due Stages': [
+    'Due Stage List',
+    'Due Stage Configuration',
+    'Due Stage Preset Reason',
+    'Reports'
+  ],
+
+  'Collaterals': [
+    'Collateral Types',
+    'RGL Collateral Types',
+    'Collateral wise Economic Index Configuration',
+    'Collateral Recovery Configuration',
+    'Valuation Sources',
+    'Valuation Source Weightages',
+    'Collateral wise Valuation Source Mapping',
+    'Reports'
+  ],
+
+  'Miscellaneous Setup': [
+    'Restructure Types',
+    'Restructure Reason',
+    'Loan Loss Classes',
+    'Loan Loss Class Preset Reason',
+    'Settlement Reason',
+    'Client Classifications',
+    'Credit Classifications',
+    'Reports'
+  ],
+
+  'Client Classifications': [
+    'Client Types',
+    'Client Sectors',
+    'Client Categories',
+    'RGL Client Types',
+    'RGL Client Sectors',
+    'RGL Client Categories',
+    'Client Groups',
+    'Occupations'
+  ],
+
+  'Credit Classifications': [
+    'Credit Types',
+    'Credit Sectors',
+    'Credit Categories',
+    'RGL Credit Types',
+    'RGL Credit Sectors',
+    'RGL Credit Categories'
+  ],
+
+  'Credit Facility Management': [
+    'Credit Restructure',
+    'Due Stage Preset',
+    'Loan Loss Class Preset',
+    'Credit Collaterals',
+    'Credit Payment Schedule',
+    'Reports'
+  ],
+
+  'Data Entry/Upload': [
+    'Macro-economic Data',
+    'Credit Data',
+    'Credit Collateral Detail',
+    'Credit Restructure Detail',
+    'Due Stage Preset Detail',
+    'Loan Loss Class Preset Detail'
+  ],
+
+  'Procedure Execution': [
+    'Macro-economic Effect Assessment',
+    'Credit Due Staging',
+    'ECL Assessment',
+    'Credit Default Probability Assessment',
+    'Credit PD Calibration',
+    'Credit Impairments'
+  ],
+
+  'ECL Reports': [
+    'Master Lists',
+    'Impairment Reports',
+    'Calculation Reports',
+    'Regulatory Reports',
+    'Policy Configuration Reports',
+    'ECL Source Data',
+    'Interesrt Income Recognition Reports'
+  ],
+
+  'Graphs': [
+    'Impairment Volume Trend',
+    'Impairment Proportions',
+    'Impairment To Credit Ratio',
+    'Due Stage Impairment',
+    'PD Trend',
+    'Actual PD Trend',
+    'Graphs- All'
+  ],
+
+  'Supervision': [
+    'Monitoring',
+    'Outstanding Jobs'
+  ],
+
+  'Monitoring': [
+    'User Logins',
+    'User Activities',
+    'Job Status',
+    'Job Cancellation',
+    'Outstanding Jobs',
+    'Batch Job Detail'
+  ],
+
+  'Outstanding Jobs': [
+    'Pending Job',
+    'Authorization Requests',
+    'Completion Notifications'
+  ],
+
+  'Periodic Functions': [
+    'Job Scheduling',
+    'BOD Operation',
+    'EOD Operation',
+    'Operation Suspension',
+    'Operation Resumption',
+    'Periodic Operations',
+    'Database Backup',
+    'Holiday',
+    'Holiday Report'
+  ],
+
+  'Periodic Operations': [
+    'BOD Processes',
+    'EOD Processes'
+  ],
+
+  'BOD Processes': [
+    'Begin BOD Operation',
+    'Open Day Operation'
+  ],
+
+  'EOD Processes': [
+    'Close Day Operation'
+  ],
+
+  'Systems': [
+    'Configurations',
+    'Access Management',
+    'Geographical Names',
+    'Calendars',
+    'Others'
+  ],
+
+  'Configurations': [
+    'Modules',
+    'System Objects',
+    'Menu',
+    'Parameters',
+    'Module Activation',
+    'Module Deactivation',
+    'System Reconfiguration',
+    'Printer Configuration',
+    'UI Reconfiguration',
+    'UI Activation',
+    'UI Deactivation',
+    'Sequence Configuration',
+    'Configuration Reports'
+  ],
+
+  'Access Management': [
+    'Roles Management',
+    'Role Resumption',
+    'Role Suspension',
+    'Edit Role Detail',
+    'Assign User Capacities',
+    'Responsibility',
+    'User Management',
+    'User Login Resumption',
+    'User Modify',
+    'User Login Suspension',
+    'User Branch Setting',
+    'Reset Password',
+    'Access Profiles'
+  ],
+
+  'User Modify': [
+    'Privilege Modify',
+    'User Detail Modify'
+  ],
+
+  'Geographical Names': [
+    'Countries',
+    'Regions',
+    'Zones',
+    'Districts',
+    'Municipalities/VDCs',
+    'Reports'
+  ],
+
+  'Reports': [
+    'Region List'
+  ],
+
+  'Calendars': [
+    'Month Names',
+    'Yearly Calendar',
+    'Calendar Report'
+  ],
+
+  'Others': [
+    'Branch',
+    'Range Setup',
+    'Ad hoc Query Builder',
+    'Ad hoc Queries',
+    'Date Loading',
+    'Additional Record Design',
+    'Setup Reports'
+  ],
+
+  'Additional Record Design': [
+    'Forms',
+    'Groups',
+    'Fields',
+    'Preset Values'
+  ],
+
+  'Utilities': [
+    'Date Conversion',
+    'Calendar',
+    'Preferences',
+    'Password Change'
+  ]
+},
   DCH: {
-    'Reconciliation': ['Daily Recon', 'Monthly Recon', 'Exception Handling'],
-    'Settlement': ['Net Settlement', 'Gross Settlement', 'Failed Transactions'],
-  },
+  'SMS Management': [
+    'Subscription',
+    'Subscription Modification',
+    'Mobile Number Modification',
+    'SMS Account Modification',
+    'SMS Subscription Renew',
+    'SMS Card Expiry Alert'
+  ],
+
+  'Card Management': [
+    'Card Subscription',
+    'Card Issue',
+    'Card Subscription Modification',
+    'Account Cards',
+    'Card Delivery',
+    'Card Block',
+    'Card Release',
+    'BIN Register',
+    'Card Activate',
+    'Card Destroy'
+  ],
+
+  'Web Management': [
+    'Web Registration',
+    'Web Registration Modification',
+    'Web Account Modification',
+    'Web Account Password Modification',
+    'Web Account Password Authorization'
+  ],
+
+  'Inter Bank Fund Management': [
+    'Inter Bank Registration',
+    'Inter Bank Registration Modification',
+    'Inter Bank Account Modification'
+  ],
+
+  'Supervision': [
+    'Monotoring',
+    'Outstanding Jobs'
+  ],
+
+  'Monotoring': [
+    'User Logins',
+    'User Activities',
+    'Job Status',
+    'Job Cancellation',
+    'Outstanding Jobs'
+  ],
+
+  'Outstanding Jobs': [
+    'Pending Job'
+  ],
+
+  'Systems': [
+    'Configurations',
+    'Access Management',
+    'Geographical Names',
+    'Calendars',
+    'Others',
+    'System Backup'
+  ],
+
+  'Configurations': [
+    'Modules',
+    'System Objects',
+    'Menu',
+    'Parameters',
+    'Module Activation',
+    'Module Deactivation',
+    'System Reconfiguration',
+    'Printer Configuration',
+    'UI Reconfiguration',
+    'UI Activation',
+    'UI Deactivation',
+    'Sequence Configuration',
+    'Configuration Reports'
+  ],
+
+  'Access Management': [
+    'Roles Management',
+    'Role Resumption',
+    'Role Suspension',
+    'Edit Role Detail',
+    'Assign User Capacities',
+    'Responsibility',
+    'User Management',
+    'User Login Resumption',
+    'User Modify',
+    'User Detail Modify',
+    'User Login Suspension',
+    'User Branch Setting',
+    'Reset Password',
+    'Access Profiles'
+  ],
+
+  'User Modify': [
+    'Priviledges Modify'
+  ],
+
+  'Geographical Names': [
+    'Countries',
+    'Regions',
+    'Zones',
+    'Districts',
+    'Reports'
+  ],
+
+  'Reports': [
+    'Region List'
+  ],
+
+  'Calendars': [
+    'Month Names',
+    'Yearly Calender',
+    'Holiday',
+    'Holiday Report',
+    'Calendar Report'
+  ],
+
+  'Others': [
+    'Branch',
+    'Range Setup',
+    'Adhoc Query Builder',
+    'Adhoc Queries',
+    'Date Loading',
+    'Additional Record Design',
+    'Setup Reports'
+  ],
+
+  'Additional Record Design': [
+    'Forms',
+    'Groups',
+    'Fields',
+    'Preset Values'
+  ],
+
+  'Utilities': [
+    'Date Conversion',
+    'Calendar',
+    'Preferences',
+    'Password Change'
+  ]
+}
 };

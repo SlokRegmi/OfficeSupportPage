@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Upload, FileText } from 'lucide-react';
 import { systemModules } from '@/data/mockData';
 import { api } from '@/services/api';
@@ -31,7 +30,6 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
   const [system, setSystem] = useState('');
   const [module, setModule] = useState('');
   const [form, setForm] = useState('');
-  const [isProduction, setIsProduction] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,7 +121,6 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
     setSystem('');
     setModule('');
     setForm('');
-    setIsProduction(false);
     setAttachments([]);
     setUploadError('');
     setSubmitError('');
@@ -152,7 +149,7 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
         system,
         module,
         form,
-        environment: isProduction ? 'Production' : 'UAT',
+        environment: 'Production',
         reporter: user?.name,
         reporterEmail: user?.email,
         attachments: attachmentsPayload,
@@ -251,14 +248,6 @@ export function CreateTicketModal({ open, onClose }: CreateTicketModalProps) {
                     <SelectItem value="Low">Low</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Environment</Label>
-                <div className="flex items-center gap-3 h-10 px-3 bg-surface rounded-md border border-border">
-                  <span className={`text-sm font-medium ${!isProduction ? 'text-foreground' : 'text-muted-foreground'}`}>UAT</span>
-                  <Switch checked={isProduction} onCheckedChange={setIsProduction} />
-                  <span className={`text-sm font-medium ${isProduction ? 'text-primary' : 'text-muted-foreground'}`}>Production</span>
-                </div>
               </div>
             </div>
           </div>

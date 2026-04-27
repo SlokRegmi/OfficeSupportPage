@@ -112,7 +112,7 @@ export function ClientTicketDetailView({ ticketId, onBack }: ClientTicketDetailV
             <DetailRow icon={Tag} label="Module" value={ticket.module} />
             {ticket.moduleDetails ? <DetailRow icon={Tag} label="Module Notes" value={ticket.moduleDetails} /> : null}
             <DetailRow icon={Monitor} label="Environment" value={ticket.environment} highlight={ticket.environment === 'Production'} />
-            <DetailRow icon={Clock} label="Created" value={ticket.createdAt} />
+            <DetailRow icon={Clock} label="Created" value={new Date(ticket.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Kathmandu' })} />
             <DetailRow icon={User} label="Assignee" value={ticket.assignee || 'Awaiting assignment'} />
             {ticket?.requestType ? <DetailRow icon={Tag} label="Request Type" value={ticket?.requestType} /> : null}
             {ticket?.requestedDelivery ? <DetailRow icon={Tag} label="Delivery" value={ticket?.requestedDelivery} /> : null}

@@ -51,6 +51,7 @@ function TicketRow({ ticket, onClick }: { ticket: Ticket; onClick: () => void })
       </td>
       <td className="px-5 py-3.5"><PriorityBadge priority={ticket.priority} /></td>
       <td className="px-5 py-3.5"><StatusBadge status={ticket.status} /></td>
+      <td className="px-5 py-3.5 text-xs text-muted-foreground">{new Date(ticket.createdAt).toLocaleString('en-GB', { timeZone: 'Asia/Kathmandu' })}</td>
       <td className="px-5 py-3.5 text-xs text-muted-foreground">{ticket.lastUpdated}</td>
       <td className="px-5 py-3.5">
         <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -120,6 +121,7 @@ export function ClientTicketListView({ onViewTicket, onNewRequest }: ClientTicke
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">System</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Priority</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-5 py-3 font-medium text-muted-foreground">Created</th>
                 <th className="text-left px-5 py-3 font-medium text-muted-foreground">Last Updated</th>
                 <th className="w-8" />
               </tr>
@@ -128,7 +130,7 @@ export function ClientTicketListView({ onViewTicket, onNewRequest }: ClientTicke
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    {Array.from({ length: 7 }).map((__, j) => (
+                    {Array.from({ length: 8 }).map((__, j) => (
                       <td key={j} className="px-5 py-4">
                         <div className="h-4 bg-muted rounded animate-pulse w-24" />
                       </td>
@@ -137,7 +139,7 @@ export function ClientTicketListView({ onViewTicket, onNewRequest }: ClientTicke
                 ))
               ) : myTickets.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={8} className="px-5 py-16 text-center">
                     <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm font-medium text-foreground">No tickets yet</p>
                     <p className="text-xs text-muted-foreground mt-1">

@@ -45,7 +45,7 @@
   {
     "id": "u-client-2",
     "name": "Reliance Admin",
-    "email": "admin@reliance.com.np",
+    "email": "admin@reliancebank.com.np",
     "password": "scrypt$45c6d5bacd656966fe535b02e18f7b2c$43d79d09f84ad067f48de4df9b1871d5cbdb4bc4b8a5e05830ea583e0bbcd07ae94ed57adb205c52749df02b520ec426e12c7a544c6232157ff79de93ee2cce5",
     "role": "client",
     "title": "IT Administrator",

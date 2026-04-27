@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import {
   TicketCheck, Clock, AlertTriangle, ArrowUpRight, RefreshCw,
-  Download, Filter, User2, X,
+  Download, Filter, X,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -92,6 +92,8 @@ function StatusBadge({ status }: { status: TicketStatus }) {
   return <Badge className={styles[status]}>{status}</Badge>;
 }
 
+const ACTIVE_STATUSES = new Set<TicketStatus>(['Open', 'In Progress', 'Pending Client']);
+
 interface DashboardViewProps {
   onViewTicket: (id: string) => void;
   searchQuery?: string;
@@ -104,19 +106,25 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSystem, setFilterSystem] = useState<string>('all');
-  const [myTicketsOnly, setMyTicketsOnly] = useState(false);
+  const [filterBank, setFilterBank] = useState<string>('all');
+  const [showAll, setShowAll] = useState(false);
 
   const systems = useMemo(() => [...new Set(tickets.map((t) => t.system))], [tickets]);
+  const banks = useMemo(() => [...new Set(tickets.map(resolveTicketBankName))].sort(), [tickets]);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
+      // Only show unassigned or assigned to the current user
+      if (user?.name) {
+        const assignee = (t.assignee ?? '').trim().toLowerCase();
+        if (assignee && assignee !== user.name.toLowerCase()) return false;
+      }
+      const isActive = ACTIVE_STATUSES.has(t.status as TicketStatus);
+      if (showAll ? isActive : !isActive) return false;
       if (filterPriority !== 'all' && t.priority !== filterPriority) return false;
       if (filterStatus !== 'all' && t.status !== filterStatus) return false;
       if (filterSystem !== 'all' && t.system !== filterSystem) return false;
-      if (myTicketsOnly) {
-        const currentAssignee = user?.name?.toLowerCase() ?? '';
-        if (!currentAssignee || t.assignee?.toLowerCase() !== currentAssignee) return false;
-      }
+      if (filterBank !== 'all' && resolveTicketBankName(t) !== filterBank) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
@@ -128,7 +136,7 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       }
       return true;
     });
-  }, [tickets, filterPriority, filterStatus, filterSystem, myTicketsOnly, searchQuery, user]);
+  }, [tickets, filterPriority, filterStatus, filterSystem, filterBank, searchQuery, user, showAll]);
 
   const kpiCards = useMemo(() => [
     {
@@ -151,13 +159,14 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
     },
   ], [tickets]);
 
-  const hasFilters = filterPriority !== 'all' || filterStatus !== 'all' || filterSystem !== 'all' || myTicketsOnly;
+  const hasFilters = filterPriority !== 'all' || filterStatus !== 'all' || filterSystem !== 'all' || filterBank !== 'all' || showAll;
 
   const clearFilters = () => {
     setFilterPriority('all');
     setFilterStatus('all');
     setFilterSystem('all');
-    setMyTicketsOnly(false);
+    setFilterBank('all');
+    setShowAll(false);
   };
 
   return (
@@ -210,6 +219,18 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
 
+        <Select value={filterBank} onValueChange={setFilterBank}>
+          <SelectTrigger className="h-8 w-40 text-xs">
+            <SelectValue placeholder="Bank" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Banks</SelectItem>
+            {banks.map((b) => (
+              <SelectItem key={b} value={b}>{b}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Select value={filterPriority} onValueChange={setFilterPriority}>
           <SelectTrigger className="h-8 w-36 text-xs">
             <SelectValue placeholder="Priority" />
@@ -228,12 +249,19 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Open">Open</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
-            <SelectItem value="Pending Client">Pending Client</SelectItem>
-            <SelectItem value="Resolved">Resolved</SelectItem>
-            <SelectItem value="Closed">Closed</SelectItem>
+            <SelectItem value="all">{showAll ? 'All Resolved/Closed' : 'All Active'}</SelectItem>
+            {showAll ? (
+              <>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+              </>
+            ) : (
+              <>
+                <SelectItem value="Open">Open</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Pending Client">Pending Client</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
 
@@ -250,16 +278,15 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
         </Select>
 
         <button
-          onClick={() => setMyTicketsOnly((v) => !v)}
+          onClick={() => { setShowAll((v) => !v); setFilterStatus('all'); }}
           className={cn(
             'flex items-center gap-1.5 h-8 px-3 rounded-md border text-xs font-medium transition-colors',
-            myTicketsOnly
+            showAll
               ? 'bg-secondary/10 text-secondary border-secondary/30'
               : 'bg-card text-muted-foreground border-border hover:bg-accent'
           )}
         >
-          <User2 className="h-3.5 w-3.5" />
-          My Tickets
+          Resolved / Closed
         </button>
 
         {hasFilters && (
@@ -287,9 +314,15 @@ export function DashboardView({ onViewTicket, searchQuery = '' }: DashboardViewP
       {/* Tickets Table */}
       <div className="bg-card rounded-lg border border-border">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-foreground">Recent Tickets</h2>
-          <button className="text-sm text-primary font-medium flex items-center gap-1 hover:underline">
-            View All <ArrowUpRight className="h-3.5 w-3.5" />
+          <h2 className="font-semibold text-foreground">
+            {showAll ? 'Resolved / Closed Tickets' : 'Active Tickets'}
+          </h2>
+          <button
+            onClick={() => { setShowAll((v) => !v); setFilterStatus('all'); }}
+            className="text-sm text-primary font-medium flex items-center gap-1 hover:underline"
+          >
+            {showAll ? 'View Active' : 'View Resolved / Closed'}
+            <ArrowUpRight className="h-3.5 w-3.5" />
           </button>
         </div>
         <div className="overflow-x-auto">
