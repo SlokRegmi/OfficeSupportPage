@@ -1,11 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
 import React, { useState } from "react";
 import { useAppContext } from "../../context/state";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Header(): JSX.Element {
   const { top } = useAppContext();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const supportPath = user?.role === 'inorins'
+    ? '/staff/dashboard'
+    : user?.role === 'client'
+      ? '/client/tickets'
+      : '/login';
 
   const toggleMobileMenu = () => setMobileOpen((v) => !v);
   const closeMobileMenu = () => setMobileOpen(false);
@@ -152,7 +160,7 @@ export default function Header(): JSX.Element {
               </li>
               <li>
                 <a
-                  onClick={() => { closeMobileMenu(); navigate("/login"); }}
+                  onClick={() => { closeMobileMenu(); navigate(supportPath); }}
                   style={{ color: top ? '#374151' : '#ffffff' }}
                   className={`block py-2 pr-4 pl-3 border-b md:border-0 md:p-0 hover:bg-gray-700 md:hover:bg-transparent border-gray-700 cursor-pointer transition-colors duration-200`}
                 >

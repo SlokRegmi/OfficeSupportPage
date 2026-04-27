@@ -40,6 +40,7 @@ export function useTicketMessages(ticketId: string) {
     queryFn: () => api.getMessages(ticketId),
     enabled: !!ticketId,
     retry: 1,
+    refetchInterval: 5000,
   });
 
   return {

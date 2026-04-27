@@ -172,6 +172,7 @@ function toMessageTimestamp(date) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "Asia/Kathmandu",
   });
 }
 
@@ -457,7 +458,7 @@ app.post("/api/tickets", async (req, res, next) => {
       assignee: "",
       description: String(payload.description ?? ""),
       attachments,
-      createdAt: now.toISOString().slice(0, 10),
+      createdAt: now.toISOString(),
       updatedAt: now.toISOString(),
     };
 
@@ -639,6 +640,30 @@ app.use((error, _req, res, _next) => {
   console.error(error);
   res.status(500).json({ message: "Internal server error." });
 });
+
+// ─── Daily backup at 7 PM ───────────────────────────────────────────────────
+const BACKUP_DIR = path.join(__dirname, 'backups');
+const BACKUP_HOUR = Number(process.env.BACKUP_HOUR ?? 19); // 12 = 12 PM
+
+async function runBackup() {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10); // YYYY-MM-DD
+  const dest = path.join(BACKUP_DIR, dateStr);
+  await fs.mkdir(dest, { recursive: true });
+  const files = [TICKETS_FILE, MESSAGES_FILE, USERS_FILE];
+  await Promise.all(files.map(f => fs.copyFile(f, path.join(dest, path.basename(f)))));
+  console.log(`[backup] Saved to ${dest}`);
+}
+
+let _lastBackupDate = null;
+setInterval(() => {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  if (now.getHours() >= BACKUP_HOUR && _lastBackupDate !== today) {
+    _lastBackupDate = today;
+    runBackup().catch(err => console.error('[backup] Failed:', err));
+  }
+}, 3600 * 1000); // check every hour
 
 const port = Number(process.env.API_PORT || 3500);
 migratePasswordsIfNeeded()

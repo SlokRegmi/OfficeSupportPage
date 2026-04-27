@@ -84,7 +84,7 @@ function AppRoutes() {
         )}
       />
 
-      <Route path="/" element={user ? <Navigate to={homePath} replace /> : <HomePage />} />
+      <Route path="/" element={<HomePage />} />
       <Route path="/service/:slug" element={<ServicePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
